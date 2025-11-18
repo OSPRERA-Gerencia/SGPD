@@ -54,6 +54,7 @@ export class PriorityWeightsRepository {
     const supabase = getClient();
     const { data, error } = await supabase
       .from('priority_weights')
+      // @ts-expect-error - Supabase types issue in build
       .update({
         impact_weight: newWeights.impactWeight,
         frequency_weight: newWeights.frequencyWeight,

@@ -18,12 +18,15 @@ import {
 } from '@/lib/validation/projectFormSchema';
 
 const requestingDepartmentLabels: Record<RequestingDepartmentValue, string> = {
-  operations: 'Operaciones',
-  technology: 'Tecnología',
-  marketing: 'Marketing',
-  finance: 'Finanzas',
-  hr: 'Recursos Humanos',
-  other: 'Otros',
+  intervention: 'Intervención',
+  general_management: 'Gerencia General',
+  medical_services: 'Gerencia de Prestaciones Médicas',
+  administration_finance: 'Gerencia Administración y Finanzas',
+  beneficiary_services: 'Gerencia Servicios a Beneficiarios',
+  legal_affairs: 'Gerencia de Asuntos Jurídicos',
+  human_resources: 'Gerencia de Recursos Humanos',
+  purchasing: 'Gerencia de Compras',
+  processes_systems: 'Gerencia Procesos y Sistemas',
 };
 
 const impactCategoryLabels: Record<ImpactCategoryValue, string> = {
@@ -48,19 +51,19 @@ const textareaClasses = `${inputClasses} min-h-[120px]`;
 const labelClasses = 'text-sm font-medium text-slate-700';
 const errorClasses = 'mt-1 text-sm text-red-600';
 
-export default function NewProjectPage(): JSX.Element {
+export default function NewProjectPage(): React.ReactElement {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<ProjectFormValues>({
-    resolver: zodResolver(projectFormSchema),
+    resolver: zodResolver(projectFormSchema) as any,
     defaultValues: {
-      requestingDepartment: 'operations',
+      requestingDepartment: 'general_management',
       title: '',
       shortDescription: '',
       problemDescription: '',
-      context: '',
       impactCategories: [],
       impactDescription: '',
       impactScore: 3,
@@ -89,52 +92,81 @@ export default function NewProjectPage(): JSX.Element {
 
   const hasExternalDependencies = watch('hasExternalDependencies');
 
-  const onSubmit = handleSubmit((values) => {
-    setServerError(null);
-    clearErrors();
+  const onSubmit = handleSubmit(
+    (values) => {
+      console.log('[Form] onSubmit llamado con valores:', values);
+      setServerError(null);
+      setSuccessMessage(null);
+      clearErrors();
 
-    startTransition(() => {
-      createProjectAction(values)
-        .then((result) => {
-          if (!result.success) {
-            if (result.fieldErrors) {
-              Object.entries(result.fieldErrors).forEach(([field, messages]) => {
-                if (!messages || messages.length === 0) {
-                  return;
-                }
-                setError(field as keyof ProjectFormValues, {
-                  type: 'server',
-                  message: messages[0],
+      console.log('[Form] Iniciando transición...');
+      startTransition(() => {
+        console.log('[Form] Llamando a createProjectAction...');
+        createProjectAction(values)
+          .then((result) => {
+            console.log('[Form] Respuesta recibida:', result);
+            if (!result.success) {
+              console.log('[Form] Error en la respuesta:', result);
+              if (result.fieldErrors) {
+                Object.entries(result.fieldErrors).forEach(([field, messages]) => {
+                  if (!messages || messages.length === 0) {
+                    return;
+                  }
+                  setError(field as keyof ProjectFormValues, {
+                    type: 'server',
+                    message: messages[0],
+                  });
                 });
-              });
+              }
+
+              if (result.formError) {
+                console.error('[Form] Error del formulario:', result.formError);
+                setServerError(result.formError);
+              } else {
+                console.error('[Form] Error sin mensaje específico');
+                setServerError('Error al crear el proyecto. Por favor, intentá nuevamente.');
+              }
+              return;
             }
 
-            if (result.formError) {
-              setServerError(result.formError);
-            }
-            return;
-          }
-
-          router.push('/projects');
-          router.refresh();
-        })
-        .catch((error) => {
-          setServerError(error instanceof Error ? error.message : 'Error inesperado al crear el proyecto.');
-        });
-    });
-  });
+            // Éxito - mostrar mensaje y redirigir después de un breve delay
+            console.log('[Form] Proyecto creado exitosamente:', result.projectId);
+            setServerError(null);
+            setSuccessMessage('¡Proyecto creado exitosamente! Redirigiendo...');
+            setTimeout(() => {
+              router.push('/');
+              router.refresh();
+            }, 2000);
+          })
+          .catch((error) => {
+            console.error('[Form] Error capturado en catch:', error);
+            setServerError(error instanceof Error ? error.message : 'Error inesperado al crear el proyecto.');
+          });
+      });
+    },
+    (errors) => {
+      console.error('[Form] Errores de validación:', errors);
+      setServerError('Por favor, completá todos los campos requeridos correctamente.');
+    }
+  );
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       <div className="max-w-3xl">
-        <h1 className="text-3xl font-semibold text-slate-900">Nuevo proyecto de desarrollo</h1>
+        <h1 className="text-3xl font-semibold text-slate-900">Solicitar nuevo proyecto de desarrollo</h1>
         <p className="mt-2 text-sm text-slate-600">
-          Completá la información para priorizar correctamente tu requerimiento. Todos los campos marcados con * son
+          Completá la información para solicitar tu proyecto de desarrollo. Todos los campos marcados con * son
           obligatorios.
         </p>
       </div>
 
-      <form onSubmit={onSubmit} className="mt-8 space-y-8">
+      <form
+        onSubmit={(e) => {
+          console.log('[Form] Evento submit del formulario capturado');
+          onSubmit(e);
+        }}
+        className="mt-8 space-y-8"
+      >
         <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-medium text-slate-900">Información básica</h2>
           <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -189,7 +221,7 @@ export default function NewProjectPage(): JSX.Element {
         </section>
 
         <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-medium text-slate-900">Problema y contexto</h2>
+          <h2 className="text-lg font-medium text-slate-900">Problema</h2>
           <div className="mt-4 grid grid-cols-1 gap-5">
             <div>
               <label className={labelClasses} htmlFor="problemDescription">
@@ -204,19 +236,6 @@ export default function NewProjectPage(): JSX.Element {
               {errors.problemDescription?.message ? (
                 <p className={errorClasses}>{errors.problemDescription.message}</p>
               ) : null}
-            </div>
-
-            <div>
-              <label className={labelClasses} htmlFor="context">
-                Contexto
-              </label>
-              <textarea
-                id="context"
-                {...register('context')}
-                className={textareaClasses}
-                aria-invalid={errors.context ? 'true' : 'false'}
-              />
-              {errors.context?.message ? <p className={errorClasses}>{errors.context.message}</p> : null}
             </div>
           </div>
         </section>
@@ -485,6 +504,11 @@ export default function NewProjectPage(): JSX.Element {
           </div>
         </section>
 
+        {successMessage ? (
+          <div className="rounded-md border border-green-200 bg-green-50 p-4 text-sm text-green-700" role="alert">
+            {successMessage}
+          </div>
+        ) : null}
         {serverError ? (
           <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
             {serverError}
@@ -495,7 +519,7 @@ export default function NewProjectPage(): JSX.Element {
           <button
             type="button"
             className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            onClick={() => router.push('/projects')}
+            onClick={() => router.push('/')}
           >
             Cancelar
           </button>
@@ -503,6 +527,11 @@ export default function NewProjectPage(): JSX.Element {
             type="submit"
             className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:bg-blue-300"
             disabled={isPending}
+            onClick={(e) => {
+              console.log('[Button] Click en botón Crear proyecto');
+              console.log('[Button] isPending:', isPending);
+              console.log('[Button] Errores del formulario:', errors);
+            }}
           >
             {isPending ? 'Creando...' : 'Crear proyecto'}
           </button>

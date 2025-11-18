@@ -48,7 +48,23 @@ const resolvedUrl = (): string | undefined => resolveSupabaseUrl();
 
 export const isSupabaseConfigured = (): boolean => {
   const url = resolvedUrl();
-  const key = resolveServiceRoleKey() ?? resolveAnonKey();
+  const serviceKey = resolveServiceRoleKey();
+  const anonKey = resolveAnonKey();
+  const key = serviceKey ?? anonKey;
+  
+  // Log para debugging en producción
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+    console.log('[Supabase Config] URL encontrada:', url ? 'Sí' : 'No');
+    console.log('[Supabase Config] Service Role Key encontrada:', serviceKey ? 'Sí' : 'No');
+    console.log('[Supabase Config] Anon Key encontrada:', anonKey ? 'Sí' : 'No');
+    if (!url) {
+      console.log('[Supabase Config] Variables de URL disponibles:', Object.keys(process.env).filter(k => k.includes('SUPABASE') && k.includes('URL')));
+    }
+    if (!key) {
+      console.log('[Supabase Config] Variables de Key disponibles:', Object.keys(process.env).filter(k => k.includes('SUPABASE') && (k.includes('KEY') || k.includes('ANON'))));
+    }
+  }
+  
   return Boolean(url && key);
 };
 

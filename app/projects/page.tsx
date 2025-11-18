@@ -4,7 +4,7 @@ import { ProjectsDashboard } from './_components/ProjectsDashboard';
 
 export const revalidate = 0;
 
-export default async function ProjectsPage(): Promise<JSX.Element> {
+export default async function ProjectsPage(): Promise<React.ReactElement> {
   const [projects, weights] = await Promise.all([
     ProjectsRepository.listProjects({
       sortField: 'score_weighted',

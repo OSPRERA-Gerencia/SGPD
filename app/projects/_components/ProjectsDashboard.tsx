@@ -30,12 +30,26 @@ type SaveWeightsResult = {
 };
 
 const departmentLabels: Record<string, string> = {
-  operations: 'Operaciones',
-  technology: 'Tecnología',
-  marketing: 'Marketing',
-  finance: 'Finanzas',
-  hr: 'Recursos Humanos',
-  other: 'Otros',
+  // Códigos en inglés (para compatibilidad con proyectos antiguos)
+  intervention: 'Intervención',
+  general_management: 'Gerencia General',
+  medical_services: 'Gerencia de Prestaciones Médicas',
+  administration_finance: 'Gerencia Administración y Finanzas',
+  beneficiary_services: 'Gerencia Servicios a Beneficiarios',
+  legal_affairs: 'Gerencia de Asuntos Jurídicos',
+  human_resources: 'Gerencia de Recursos Humanos',
+  purchasing: 'Gerencia de Compras',
+  processes_systems: 'Gerencia Procesos y Sistemas',
+  // Nombres en español (para proyectos nuevos)
+  'Intervención': 'Intervención',
+  'Gerencia General': 'Gerencia General',
+  'Gerencia de Prestaciones Médicas': 'Gerencia de Prestaciones Médicas',
+  'Gerencia Administración y Finanzas': 'Gerencia Administración y Finanzas',
+  'Gerencia Servicios a Beneficiarios': 'Gerencia Servicios a Beneficiarios',
+  'Gerencia de Asuntos Jurídicos': 'Gerencia de Asuntos Jurídicos',
+  'Gerencia de Recursos Humanos': 'Gerencia de Recursos Humanos',
+  'Gerencia de Compras': 'Gerencia de Compras',
+  'Gerencia Procesos y Sistemas': 'Gerencia Procesos y Sistemas',
 };
 
 const statusLabels: Record<ProjectStatus, string> = {
@@ -77,7 +91,7 @@ const parseScoreFilter = (value: string): number | null => {
 
 const formatSearchable = (value: string | null): string => value?.toLowerCase() ?? '';
 
-export function ProjectsDashboard({ initialProjects, initialWeights }: ProjectsDashboardProps): JSX.Element {
+export function ProjectsDashboard({ initialProjects, initialWeights }: ProjectsDashboardProps): React.ReactElement {
   const [projects, setProjects] = useState<ProjectsRow[]>(initialProjects);
   const [weights, setWeights] = useState<PriorityWeights>(initialWeights);
 

@@ -1,7 +1,17 @@
 import { z } from 'zod';
 import type { UrgencyLevel } from '../types/database';
 
-export const REQUESTING_DEPARTMENT_VALUES = ['operations', 'technology', 'marketing', 'finance', 'hr', 'other'] as const;
+export const REQUESTING_DEPARTMENT_VALUES = [
+  'intervention',
+  'general_management',
+  'medical_services',
+  'administration_finance',
+  'beneficiary_services',
+  'legal_affairs',
+  'human_resources',
+  'purchasing',
+  'processes_systems',
+] as const;
 
 export const IMPACT_CATEGORY_VALUES = [
   'efficiency',
@@ -28,40 +38,38 @@ const optionalEmailSchema = z
 
 export const projectFormSchema = z.object({
   requestingDepartment: z.enum(REQUESTING_DEPARTMENT_VALUES, {
-    required_error: 'La gerencia solicitante es obligatoria.',
-    invalid_type_error: 'Seleccioná una gerencia válida.',
+    message: 'Seleccioná una gerencia válida.',
   }),
   title: z
-    .string({ required_error: 'El título es obligatorio.' })
+    .string()
     .trim()
     .min(1, { message: 'El título es obligatorio.' }),
   shortDescription: optionalTrimmedString,
   problemDescription: z
-    .string({ required_error: 'La descripción del problema es obligatoria.' })
+    .string()
     .trim()
     .min(1, { message: 'La descripción del problema es obligatoria.' }),
-  context: optionalTrimmedString,
   impactCategories: z.array(z.enum(IMPACT_CATEGORY_VALUES)).optional().default([]),
   impactDescription: optionalTrimmedString,
   impactScore: z
     .coerce
-    .number({ required_error: 'Seleccioná un puntaje de impacto.' })
+    .number()
     .min(1, { message: 'El puntaje de impacto debe ser entre 1 y 5.' })
     .max(5, { message: 'El puntaje de impacto debe ser entre 1 y 5.' }),
   frequencyDescription: optionalTrimmedString,
   frequencyScore: z
     .coerce
-    .number({ required_error: 'Seleccioná un puntaje de frecuencia.' })
+    .number()
     .min(1, { message: 'El puntaje de frecuencia debe ser entre 1 y 5.' })
     .max(5, { message: 'El puntaje de frecuencia debe ser entre 1 y 5.' }),
   urgencyLevel: z.enum(URGENCY_LEVEL_VALUES, {
-    required_error: 'Seleccioná un nivel de urgencia.',
-  }) satisfies z.ZodEnum<typeof URGENCY_LEVEL_VALUES>,
+    message: 'Seleccioná un nivel de urgencia.',
+  }),
   hasExternalDependencies: z.boolean().default(false),
   dependenciesDetail: optionalTrimmedString,
   otherDepartmentsInvolved: optionalTrimmedString,
   contactName: z
-    .string({ required_error: 'El nombre referente es obligatorio.' })
+    .string()
     .trim()
     .min(1, { message: 'El nombre referente es obligatorio.' }),
   contactDepartment: optionalTrimmedString,

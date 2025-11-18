@@ -6,6 +6,18 @@ import {
   type ProjectListSortField,
   type SortDirection,
 } from '@/lib/repositories/ProjectsRepository';
+
+const departmentLabels: Record<string, string> = {
+  intervention: 'Intervención',
+  general_management: 'Gerencia General',
+  medical_services: 'Gerencia de Prestaciones Médicas',
+  administration_finance: 'Gerencia Administración y Finanzas',
+  beneficiary_services: 'Gerencia Servicios a Beneficiarios',
+  legal_affairs: 'Gerencia de Asuntos Jurídicos',
+  human_resources: 'Gerencia de Recursos Humanos',
+  purchasing: 'Gerencia de Compras',
+  processes_systems: 'Gerencia Procesos y Sistemas',
+};
 import { PriorityWeightsRepository } from '@/lib/repositories/PriorityWeightsRepository';
 import { SprintAllocationsRepository } from '@/lib/repositories/SprintAllocationsRepository';
 import { SprintsRepository } from '@/lib/repositories/SprintsRepository';
@@ -65,12 +77,14 @@ export async function createProjectAction(values: ProjectFormValues): Promise<Cr
   const data = parsed.data;
 
   try {
+    // Convertir el código de gerencia al nombre en español
+    const departmentName = departmentLabels[data.requestingDepartment] ?? data.requestingDepartment;
+    
     const project = await ProjectsRepository.createProject({
-      requestingDepartment: data.requestingDepartment,
+      requestingDepartment: departmentName,
       title: data.title,
       shortDescription: toNullable(data.shortDescription ?? undefined),
       problemDescription: data.problemDescription,
-      context: toNullable(data.context ?? undefined),
       impactCategories: data.impactCategories && data.impactCategories.length > 0 ? data.impactCategories : null,
       impactDescription: toNullable(data.impactDescription ?? undefined),
       impactScore: data.impactScore,
@@ -91,6 +105,7 @@ export async function createProjectAction(values: ProjectFormValues): Promise<Cr
       projectId: project.id,
     };
   } catch (error) {
+    console.error('Error en createProjectAction:', error);
     const message = error instanceof Error ? error.message : 'Error desconocido al crear el proyecto.';
     return {
       success: false,

@@ -95,7 +95,7 @@ const Modal = ({
   title: string;
   children: React.ReactNode;
   onClose: () => void;
-}): JSX.Element => (
+}): React.ReactElement => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
     <div className="w-full max-w-lg rounded-lg bg-white shadow-xl">
       <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
@@ -114,7 +114,7 @@ const Modal = ({
   </div>
 );
 
-export function SprintsDashboard({ initialSummaries, initialDetail }: SprintsDashboardProps): JSX.Element {
+export function SprintsDashboard({ initialSummaries, initialDetail }: SprintsDashboardProps): React.ReactElement {
   const [summaries, setSummaries] = useState<SprintSummary[]>(initialSummaries);
   const [selectedDetail, setSelectedDetail] = useState<SprintDetail | null>(initialDetail);
   const [selectedSprintId, setSelectedSprintId] = useState<string | null>(

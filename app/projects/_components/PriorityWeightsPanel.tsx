@@ -46,7 +46,7 @@ export function PriorityWeightsPanel({
   isSaving,
   serverError,
   onClearServerError,
-}: PriorityWeightsPanelProps): JSX.Element {
+}: PriorityWeightsPanelProps): React.ReactElement {
   const [formValues, setFormValues] = useState<FormState>(() => toFormState(weights));
   const [localError, setLocalError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);

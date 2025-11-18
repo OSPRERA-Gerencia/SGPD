@@ -59,6 +59,7 @@ export class SprintsRepository {
       status: input.status,
     };
 
+    // @ts-expect-error - Supabase types issue in build
     const { data, error } = await supabase.from('sprints').insert(payload).select('*').single();
 
     if (error) {
@@ -106,6 +107,7 @@ export class SprintsRepository {
       return this.getSprintById(id);
     }
 
+    // @ts-expect-error - Supabase types issue in build
     const { data, error } = await supabase.from('sprints').update(updates).eq('id', id).select('*').maybeSingle();
 
     if (error) {

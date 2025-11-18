@@ -3,7 +3,7 @@ import { SprintsDashboard } from './_components/SprintsDashboard';
 
 export const revalidate = 0;
 
-export default async function SprintsPage(): Promise<JSX.Element> {
+export default async function SprintsPage(): Promise<React.ReactElement> {
   const summaries = await getSprintSummaries();
   const initialDetail =
     summaries.length > 0 ? await getSprintDetailForServer(summaries[0].sprint.id) : null;

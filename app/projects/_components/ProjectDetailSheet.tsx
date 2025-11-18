@@ -38,14 +38,14 @@ const formatDateTime = (value: string | null, includeTime = false): string => {
   return formatter.format(date);
 };
 
-const Section = ({ title, children }: { title: string; children: React.ReactNode }): JSX.Element => (
+const Section = ({ title, children }: { title: string; children: React.ReactNode }): React.ReactElement => (
   <section className="space-y-2">
     <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{title}</h3>
     <div className="rounded-md border border-slate-200 bg-white p-3 text-sm text-slate-700">{children}</div>
   </section>
 );
 
-const DetailRow = ({ label, value }: { label: string; value: React.ReactNode }): JSX.Element => (
+const DetailRow = ({ label, value }: { label: string; value: React.ReactNode }): React.ReactElement => (
   <div className="flex flex-col gap-1 border-b border-dashed border-slate-200 pb-2 last:border-b-0 last:pb-0">
     <span className="text-xs font-medium uppercase text-slate-500">{label}</span>
     <span className="text-sm text-slate-800">{value ?? '—'}</span>
@@ -61,7 +61,7 @@ export function ProjectDetailSheet({
   statusLabels,
   urgencyLabels,
   departmentLabels,
-}: ProjectDetailSheetProps): JSX.Element | null {
+}: ProjectDetailSheetProps): React.ReactElement | null {
   if (!project) {
     return null;
   }

@@ -264,11 +264,11 @@ const applyProjectFilters = (projects: ProjectsRow[], filters: MemoryProjectFilt
   }
 
   if (typeof filters.minScoreWeighted === 'number') {
-    result = result.filter((project) => project.score_weighted >= filters.minScoreWeighted);
+    result = result.filter((project) => project.score_weighted >= filters.minScoreWeighted!);
   }
 
   if (typeof filters.maxScoreWeighted === 'number') {
-    result = result.filter((project) => project.score_weighted <= filters.maxScoreWeighted);
+    result = result.filter((project) => project.score_weighted <= filters.maxScoreWeighted!);
   }
 
   const sortField: MemoryProjectSortField = filters.sortField ?? 'score_weighted';
@@ -315,19 +315,19 @@ const applySprintFilters = (sprints: SprintsRow[], filters: MemorySprintFilters 
   }
 
   if (filters.startDateFrom) {
-    result = result.filter((sprint) => sprint.start_date >= filters.startDateFrom);
+    result = result.filter((sprint) => sprint.start_date >= filters.startDateFrom!);
   }
 
   if (filters.startDateTo) {
-    result = result.filter((sprint) => sprint.start_date <= filters.startDateTo);
+    result = result.filter((sprint) => sprint.start_date <= filters.startDateTo!);
   }
 
   if (filters.endDateFrom) {
-    result = result.filter((sprint) => sprint.end_date >= filters.endDateFrom);
+    result = result.filter((sprint) => sprint.end_date >= filters.endDateFrom!);
   }
 
   if (filters.endDateTo) {
-    result = result.filter((sprint) => sprint.end_date <= filters.endDateTo);
+    result = result.filter((sprint) => sprint.end_date <= filters.endDateTo!);
   }
 
   if (filters.search) {
@@ -479,7 +479,7 @@ export const memorySprints = {
     sprint.updated_at = nowIso();
     return cloneSprint(sprint);
   },
-  listSprints: (filters?: SprintFilters): SprintsRow[] => applySprintFilters(state.sprints, filters).map(cloneSprint),
+  listSprints: (filters?: MemorySprintFilters): SprintsRow[] => applySprintFilters(state.sprints, filters).map(cloneSprint),
   getSprintById: (id: string): SprintsRow | null => {
     const sprint = state.sprints.find((item) => item.id === id);
     return sprint ? cloneSprint(sprint) : null;

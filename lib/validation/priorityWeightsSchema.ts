@@ -5,15 +5,15 @@ const EPSILON = 1e-6;
 export const priorityWeightsSchema = z
   .object({
     impactWeight: z
-      .number({ required_error: 'El peso de impacto es obligatorio.' })
+      .coerce.number()
       .min(0, { message: 'El peso de impacto no puede ser negativo.' })
       .max(1, { message: 'El peso de impacto no puede superar 1.' }),
     frequencyWeight: z
-      .number({ required_error: 'El peso de frecuencia es obligatorio.' })
+      .coerce.number()
       .min(0, { message: 'El peso de frecuencia no puede ser negativo.' })
       .max(1, { message: 'El peso de frecuencia no puede superar 1.' }),
     urgencyWeight: z
-      .number({ required_error: 'El peso de urgencia es obligatorio.' })
+      .coerce.number()
       .min(0, { message: 'El peso de urgencia no puede ser negativo.' })
       .max(1, { message: 'El peso de urgencia no puede superar 1.' }),
   })
