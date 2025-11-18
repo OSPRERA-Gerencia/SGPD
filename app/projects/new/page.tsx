@@ -1,0 +1,514 @@
+'use client';
+
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+import { createProjectAction } from '../actions';
+import {
+  IMPACT_CATEGORY_VALUES,
+  REQUESTING_DEPARTMENT_VALUES,
+  URGENCY_LEVEL_VALUES,
+  projectFormSchema,
+  type ImpactCategoryValue,
+  type ProjectFormValues,
+  type RequestingDepartmentValue,
+  type UrgencyLevelValue,
+} from '@/lib/validation/projectFormSchema';
+
+const requestingDepartmentLabels: Record<RequestingDepartmentValue, string> = {
+  operations: 'Operaciones',
+  technology: 'Tecnología',
+  marketing: 'Marketing',
+  finance: 'Finanzas',
+  hr: 'Recursos Humanos',
+  other: 'Otros',
+};
+
+const impactCategoryLabels: Record<ImpactCategoryValue, string> = {
+  efficiency: 'Eficiencia',
+  control: 'Control',
+  member_experience: 'Experiencia Afiliado',
+  compliance: 'Cumplimiento Normativo',
+  other: 'Otros',
+};
+
+const urgencyLevelLabels: Record<UrgencyLevelValue, string> = {
+  high: 'Alta',
+  medium: 'Media',
+  low: 'Baja',
+};
+
+const scoreOptions = [1, 2, 3, 4, 5];
+
+const inputClasses =
+  'mt-1 w-full rounded-md border border-slate-300 bg-white p-3 text-sm shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20';
+const textareaClasses = `${inputClasses} min-h-[120px]`;
+const labelClasses = 'text-sm font-medium text-slate-700';
+const errorClasses = 'mt-1 text-sm text-red-600';
+
+export default function NewProjectPage(): JSX.Element {
+  const router = useRouter();
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const form = useForm<ProjectFormValues>({
+    resolver: zodResolver(projectFormSchema),
+    defaultValues: {
+      requestingDepartment: 'operations',
+      title: '',
+      shortDescription: '',
+      problemDescription: '',
+      context: '',
+      impactCategories: [],
+      impactDescription: '',
+      impactScore: 3,
+      frequencyDescription: '',
+      frequencyScore: 3,
+      urgencyLevel: 'medium',
+      hasExternalDependencies: false,
+      dependenciesDetail: '',
+      otherDepartmentsInvolved: '',
+      contactName: '',
+      contactDepartment: '',
+      contactEmail: '',
+      contactPhone: '',
+    },
+  });
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    setError,
+    clearErrors,
+    watch,
+  } = form;
+
+  const hasExternalDependencies = watch('hasExternalDependencies');
+
+  const onSubmit = handleSubmit((values) => {
+    setServerError(null);
+    clearErrors();
+
+    startTransition(() => {
+      createProjectAction(values)
+        .then((result) => {
+          if (!result.success) {
+            if (result.fieldErrors) {
+              Object.entries(result.fieldErrors).forEach(([field, messages]) => {
+                if (!messages || messages.length === 0) {
+                  return;
+                }
+                setError(field as keyof ProjectFormValues, {
+                  type: 'server',
+                  message: messages[0],
+                });
+              });
+            }
+
+            if (result.formError) {
+              setServerError(result.formError);
+            }
+            return;
+          }
+
+          router.push('/projects');
+          router.refresh();
+        })
+        .catch((error) => {
+          setServerError(error instanceof Error ? error.message : 'Error inesperado al crear el proyecto.');
+        });
+    });
+  });
+
+  return (
+    <div className="mx-auto max-w-5xl px-4 py-10">
+      <div className="max-w-3xl">
+        <h1 className="text-3xl font-semibold text-slate-900">Nuevo proyecto de desarrollo</h1>
+        <p className="mt-2 text-sm text-slate-600">
+          Completá la información para priorizar correctamente tu requerimiento. Todos los campos marcados con * son
+          obligatorios.
+        </p>
+      </div>
+
+      <form onSubmit={onSubmit} className="mt-8 space-y-8">
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-medium text-slate-900">Información básica</h2>
+          <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div>
+              <label className={labelClasses} htmlFor="requestingDepartment">
+                Gerencia solicitante *
+              </label>
+              <select
+                id="requestingDepartment"
+                {...register('requestingDepartment')}
+                className={inputClasses}
+                aria-invalid={errors.requestingDepartment ? 'true' : 'false'}
+              >
+                {REQUESTING_DEPARTMENT_VALUES.map((value) => (
+                  <option key={value} value={value}>
+                    {requestingDepartmentLabels[value]}
+                  </option>
+                ))}
+              </select>
+              {errors.requestingDepartment?.message ? (
+                <p className={errorClasses}>{errors.requestingDepartment.message}</p>
+              ) : null}
+            </div>
+
+            <div>
+              <label className={labelClasses} htmlFor="title">
+                Título del requerimiento *
+              </label>
+              <input
+                id="title"
+                type="text"
+                {...register('title')}
+                className={inputClasses}
+                aria-invalid={errors.title ? 'true' : 'false'}
+              />
+              {errors.title?.message ? <p className={errorClasses}>{errors.title.message}</p> : null}
+            </div>
+
+            <div className="md:col-span-2">
+              <label className={labelClasses} htmlFor="shortDescription">
+                Descripción breve
+              </label>
+              <textarea
+                id="shortDescription"
+                {...register('shortDescription')}
+                className={`${textareaClasses} min-h-[80px]`}
+                aria-invalid={errors.shortDescription ? 'true' : 'false'}
+              />
+              {errors.shortDescription?.message ? <p className={errorClasses}>{errors.shortDescription.message}</p> : null}
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-medium text-slate-900">Problema y contexto</h2>
+          <div className="mt-4 grid grid-cols-1 gap-5">
+            <div>
+              <label className={labelClasses} htmlFor="problemDescription">
+                Descripción del problema o necesidad *
+              </label>
+              <textarea
+                id="problemDescription"
+                {...register('problemDescription')}
+                className={textareaClasses}
+                aria-invalid={errors.problemDescription ? 'true' : 'false'}
+              />
+              {errors.problemDescription?.message ? (
+                <p className={errorClasses}>{errors.problemDescription.message}</p>
+              ) : null}
+            </div>
+
+            <div>
+              <label className={labelClasses} htmlFor="context">
+                Contexto
+              </label>
+              <textarea
+                id="context"
+                {...register('context')}
+                className={textareaClasses}
+                aria-invalid={errors.context ? 'true' : 'false'}
+              />
+              {errors.context?.message ? <p className={errorClasses}>{errors.context.message}</p> : null}
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-medium text-slate-900">Impacto</h2>
+          <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div className="md:col-span-2">
+              <span className={labelClasses}>Categorías de impacto</span>
+              <Controller
+                name="impactCategories"
+                control={control}
+                render={({ field }) => {
+                  const selectedValues = field.value ?? [];
+                  const toggleValue = (value: ImpactCategoryValue, checked: boolean): void => {
+                    if (checked) {
+                      field.onChange([...selectedValues, value]);
+                    } else {
+                      field.onChange(selectedValues.filter((item) => item !== value));
+                    }
+                  };
+
+                  return (
+                    <div className="mt-2 grid gap-2 md:grid-cols-2">
+                      {IMPACT_CATEGORY_VALUES.map((value) => {
+                        const checked = selectedValues.includes(value);
+                        return (
+                          <label key={value} className="flex items-center gap-2 text-sm text-slate-700">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                              checked={checked}
+                              onChange={(event) => toggleValue(value, event.currentTarget.checked)}
+                            />
+                            {impactCategoryLabels[value]}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  );
+                }}
+              />
+              {errors.impactCategories?.message ? <p className={errorClasses}>{errors.impactCategories.message}</p> : null}
+            </div>
+
+            <div className="md:col-span-2">
+              <label className={labelClasses} htmlFor="impactDescription">
+                Descripción del impacto
+              </label>
+              <textarea
+                id="impactDescription"
+                {...register('impactDescription')}
+                className={textareaClasses}
+                aria-invalid={errors.impactDescription ? 'true' : 'false'}
+              />
+              {errors.impactDescription?.message ? (
+                <p className={errorClasses}>{errors.impactDescription.message}</p>
+              ) : null}
+            </div>
+
+            <div>
+              <label className={labelClasses} htmlFor="impactScore">
+                Puntaje de impacto *
+              </label>
+              <Controller
+                name="impactScore"
+                control={control}
+                render={({ field }) => (
+                  <select
+                    id="impactScore"
+                    className={inputClasses}
+                    value={field.value?.toString() ?? ''}
+                    onChange={(event) => field.onChange(Number(event.currentTarget.value))}
+                    aria-invalid={errors.impactScore ? 'true' : 'false'}
+                  >
+                    <option value="">Seleccioná un puntaje</option>
+                    {scoreOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              />
+              {errors.impactScore?.message ? <p className={errorClasses}>{errors.impactScore.message}</p> : null}
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-medium text-slate-900">Frecuencia / Volumen</h2>
+          <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div className="md:col-span-2">
+              <label className={labelClasses} htmlFor="frequencyDescription">
+                Descripción de la frecuencia
+              </label>
+              <textarea
+                id="frequencyDescription"
+                {...register('frequencyDescription')}
+                className={textareaClasses}
+                aria-invalid={errors.frequencyDescription ? 'true' : 'false'}
+              />
+              {errors.frequencyDescription?.message ? (
+                <p className={errorClasses}>{errors.frequencyDescription.message}</p>
+              ) : null}
+            </div>
+
+            <div>
+              <label className={labelClasses} htmlFor="frequencyScore">
+                Puntaje de frecuencia *
+              </label>
+              <Controller
+                name="frequencyScore"
+                control={control}
+                render={({ field }) => (
+                  <select
+                    id="frequencyScore"
+                    className={inputClasses}
+                    value={field.value?.toString() ?? ''}
+                    onChange={(event) => field.onChange(Number(event.currentTarget.value))}
+                    aria-invalid={errors.frequencyScore ? 'true' : 'false'}
+                  >
+                    <option value="">Seleccioná un puntaje</option>
+                    {scoreOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              />
+              {errors.frequencyScore?.message ? <p className={errorClasses}>{errors.frequencyScore.message}</p> : null}
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-medium text-slate-900">Urgencia</h2>
+          <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div>
+              <label className={labelClasses} htmlFor="urgencyLevel">
+                Nivel de urgencia *
+              </label>
+              <select
+                id="urgencyLevel"
+                {...register('urgencyLevel')}
+                className={inputClasses}
+                aria-invalid={errors.urgencyLevel ? 'true' : 'false'}
+              >
+                <option value="">Seleccioná un nivel</option>
+                {URGENCY_LEVEL_VALUES.map((value) => (
+                  <option key={value} value={value}>
+                    {urgencyLevelLabels[value]}
+                  </option>
+                ))}
+              </select>
+              {errors.urgencyLevel?.message ? <p className={errorClasses}>{errors.urgencyLevel.message}</p> : null}
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-medium text-slate-900">Dependencias y contacto</h2>
+          <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div className="flex items-center gap-3">
+              <input
+                id="hasExternalDependencies"
+                type="checkbox"
+                {...register('hasExternalDependencies')}
+                className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
+              <label className={labelClasses} htmlFor="hasExternalDependencies">
+                ¿Requiere cambios en otros sistemas?
+              </label>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className={labelClasses} htmlFor="dependenciesDetail">
+                Detalle de dependencias
+              </label>
+              <textarea
+                id="dependenciesDetail"
+                {...register('dependenciesDetail')}
+                className={textareaClasses}
+                disabled={!hasExternalDependencies}
+                aria-invalid={errors.dependenciesDetail ? 'true' : 'false'}
+              />
+              {errors.dependenciesDetail?.message ? (
+                <p className={errorClasses}>{errors.dependenciesDetail.message}</p>
+              ) : null}
+            </div>
+
+            <div>
+              <label className={labelClasses} htmlFor="otherDepartmentsInvolved">
+                Otras gerencias involucradas
+              </label>
+              <input
+                id="otherDepartmentsInvolved"
+                type="text"
+                {...register('otherDepartmentsInvolved')}
+                className={inputClasses}
+                aria-invalid={errors.otherDepartmentsInvolved ? 'true' : 'false'}
+              />
+              {errors.otherDepartmentsInvolved?.message ? (
+                <p className={errorClasses}>{errors.otherDepartmentsInvolved.message}</p>
+              ) : null}
+            </div>
+
+            <div>
+              <label className={labelClasses} htmlFor="contactName">
+                Nombre referente *
+              </label>
+              <input
+                id="contactName"
+                type="text"
+                {...register('contactName')}
+                className={inputClasses}
+                aria-invalid={errors.contactName ? 'true' : 'false'}
+              />
+              {errors.contactName?.message ? <p className={errorClasses}>{errors.contactName.message}</p> : null}
+            </div>
+
+            <div>
+              <label className={labelClasses} htmlFor="contactDepartment">
+                Gerencia referente
+              </label>
+              <input
+                id="contactDepartment"
+                type="text"
+                {...register('contactDepartment')}
+                className={inputClasses}
+                aria-invalid={errors.contactDepartment ? 'true' : 'false'}
+              />
+              {errors.contactDepartment?.message ? (
+                <p className={errorClasses}>{errors.contactDepartment.message}</p>
+              ) : null}
+            </div>
+
+            <div>
+              <label className={labelClasses} htmlFor="contactEmail">
+                Email referente
+              </label>
+              <input
+                id="contactEmail"
+                type="email"
+                {...register('contactEmail')}
+                className={inputClasses}
+                aria-invalid={errors.contactEmail ? 'true' : 'false'}
+              />
+              {errors.contactEmail?.message ? <p className={errorClasses}>{errors.contactEmail.message}</p> : null}
+            </div>
+
+            <div>
+              <label className={labelClasses} htmlFor="contactPhone">
+                Teléfono referente
+              </label>
+              <input
+                id="contactPhone"
+                type="text"
+                {...register('contactPhone')}
+                className={inputClasses}
+                aria-invalid={errors.contactPhone ? 'true' : 'false'}
+              />
+              {errors.contactPhone?.message ? <p className={errorClasses}>{errors.contactPhone.message}</p> : null}
+            </div>
+          </div>
+        </section>
+
+        {serverError ? (
+          <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
+            {serverError}
+          </div>
+        ) : null}
+
+        <div className="flex items-center justify-end gap-3">
+          <button
+            type="button"
+            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            onClick={() => router.push('/projects')}
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:bg-blue-300"
+            disabled={isPending}
+          >
+            {isPending ? 'Creando...' : 'Crear proyecto'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
