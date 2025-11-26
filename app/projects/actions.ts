@@ -79,7 +79,7 @@ export async function createProjectAction(values: ProjectFormValues): Promise<Cr
   try {
     // Convertir el código de gerencia al nombre en español
     const departmentName = departmentLabels[data.requestingDepartment] ?? data.requestingDepartment;
-    
+
     const project = await ProjectsRepository.createProject({
       requestingDepartment: departmentName,
       title: data.title,
@@ -98,6 +98,25 @@ export async function createProjectAction(values: ProjectFormValues): Promise<Cr
       contactDepartment: toNullable(data.contactDepartment ?? undefined),
       contactEmail: toOptional(data.contactEmail ?? undefined),
       contactPhone: toNullable(data.contactPhone ?? undefined),
+    });
+
+    // Create Jira ticket asynchronously (don't block project creation if Jira fails)
+    const { createJiraTicket } = await import('@/lib/services/jira');
+
+    createJiraTicket({
+      title: data.title,
+      description: data.problemDescription,
+      urgency: data.urgencyLevel,
+      // We don't have story points or time size in the project form yet
+      // These can be added later if needed
+    }).then((result) => {
+      if (result.success) {
+        console.log(`[Jira] Successfully created ticket ${result.issueKey} for project ${project.id}`);
+      } else {
+        console.error(`[Jira] Failed to create ticket for project ${project.id}:`, result.error);
+      }
+    }).catch((error) => {
+      console.error(`[Jira] Unexpected error creating ticket for project ${project.id}:`, error);
     });
 
     return {
