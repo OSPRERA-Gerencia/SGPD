@@ -1,8 +1,10 @@
 const https = require('https');
 
-const email = 'tobitraverso@gmail.com';
-const apiToken = 'ATATT3xFfGF09DyVXlMqQ5iX2Y5Jxjrudgg8i5N_hZag1F7K2q-37A8nntYLVeKefjsXOlwByjoHJHz8Vi9_ma-6-QeHnM1ud5xtIT9sHaXHzMNE9lRr66Q54Qh8lVanAkjsgZ2bQOcQjY9EY7FGWbCGQOovHxst_R-rW1QM1zVXSOCp4rAnhrE=534848A0';
-const domain = 'o-d.atlassian.net';
+// SECURITY: Use environment variables instead of hardcoded credentials
+// Run with: JIRA_EMAIL=your@email.com JIRA_API_TOKEN=your-token node discover-jira-fields.js
+const email = process.env.JIRA_EMAIL || '';
+const apiToken = process.env.JIRA_API_TOKEN || '';
+const domain = process.env.JIRA_DOMAIN || 'o-d.atlassian.net';
 
 const auth = Buffer.from(`${email}:${apiToken}`).toString('base64');
 
