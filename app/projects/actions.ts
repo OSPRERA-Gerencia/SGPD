@@ -107,8 +107,17 @@ export async function createProjectAction(values: ProjectFormValues): Promise<Cr
       title: data.title,
       description: data.problemDescription,
       urgency: data.urgencyLevel,
-      // We don't have story points or time size in the project form yet
-      // These can be added later if needed
+      // New fields mapping
+      requestingDepartment: departmentName,
+      impactDescription: data.impactDescription,
+      impactScore: data.impactScore,
+      impactCategories: data.impactCategories,
+      frequencyDescription: data.frequencyDescription,
+      frequencyScore: data.frequencyScore,
+      hasExternalDependencies: data.hasExternalDependencies,
+      dependenciesDetail: data.dependenciesDetail,
+      contactName: data.contactName,
+      contactEmail: data.contactEmail,
     }).then((result) => {
       if (result.success) {
         console.log(`[Jira] Successfully created ticket ${result.issueKey} for project ${project.id}`);
