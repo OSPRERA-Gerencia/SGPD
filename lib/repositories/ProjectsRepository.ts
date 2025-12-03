@@ -297,7 +297,6 @@ export class ProjectsRepository {
     }
 
     const supabase = getClient();
-    // @ts-expect-error - Supabase types issue in build
     const { data, error } = await supabase
       .from('projects')
       .update(updates)
