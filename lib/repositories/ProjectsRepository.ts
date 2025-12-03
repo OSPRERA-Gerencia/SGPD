@@ -297,10 +297,10 @@ export class ProjectsRepository {
     }
 
     const supabase = getClient();
-    // Cast updates to any to avoid sporadic TS build errors (never type)
     const { data, error } = await supabase
       .from('projects')
-      .update(updates as any)
+      // @ts-ignore
+      .update(updates)
       .eq('id', id)
       .select('*')
       .maybeSingle();
