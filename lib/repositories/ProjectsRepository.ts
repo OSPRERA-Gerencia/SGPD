@@ -289,5 +289,27 @@ export class ProjectsRepository {
       throw new Error(`Error al actualizar el score ponderado del proyecto ${id}: ${error.message}`);
     }
   }
+
+  static async updateProject(id: string, updates: ProjectsUpdate): Promise<ProjectsRow | null> {
+    if (!isSupabaseConfigured()) {
+      console.warn('[ProjectsRepository] Supabase no configurado');
+      return null;
+    }
+
+    const supabase = getClient();
+    // @ts-expect-error - Supabase types issue in build
+    const { data, error } = await supabase
+      .from('projects')
+      .update(updates)
+      .eq('id', id)
+      .select('*')
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Error al actualizar el proyecto ${id}: ${error.message}`);
+    }
+
+    return data ?? null;
+  }
 }
 

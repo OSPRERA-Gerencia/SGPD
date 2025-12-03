@@ -304,3 +304,49 @@ export async function getProjectAllocationsAction(projectId: string): Promise<Ge
   }
 }
 
+export type UpdateProjectDetailsSuccess = {
+  success: true;
+  project: ProjectsRow;
+};
+
+export type UpdateProjectDetailsFailure = {
+  success: false;
+  error: string;
+};
+
+export type UpdateProjectDetailsResult = UpdateProjectDetailsSuccess | UpdateProjectDetailsFailure;
+
+export async function updateProjectDetailsAction(
+  projectId: string,
+  updates: Partial<ProjectsRow>
+): Promise<UpdateProjectDetailsResult> {
+  if (!projectId) {
+    return {
+      success: false,
+      error: 'ID de proyecto inválido',
+    };
+  }
+
+  try {
+    const updatedProject = await ProjectsRepository.updateProject(projectId, updates);
+
+    if (!updatedProject) {
+      return {
+        success: false,
+        error: 'No se pudo actualizar el proyecto',
+      };
+    }
+
+    return {
+      success: true,
+      project: updatedProject,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Error al actualizar el proyecto';
+    return {
+      success: false,
+      error: message,
+    };
+  }
+}
+

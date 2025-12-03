@@ -90,6 +90,7 @@ const ProjectsTableComponent = ({
             <th className="px-4 py-3">Impacto</th>
             <th className="px-4 py-3">Frecuencia</th>
             <th className="px-4 py-3">Urgencia</th>
+            <th className="px-4 py-3">Tamaño</th>
             <th className="px-4 py-3">Estado</th>
             <th className="px-4 py-3">Creado</th>
           </tr>
@@ -97,36 +98,96 @@ const ProjectsTableComponent = ({
         <tbody className="divide-y divide-slate-200 text-sm">
           {projects.length === 0 ? (
             <tr>
-              <td className="px-4 py-6 text-center text-slate-500" colSpan={9}>
+              <td className="px-4 py-6 text-center text-slate-500" colSpan={10}>
                 No se encontraron proyectos con los filtros seleccionados.
               </td>
             </tr>
           ) : (
-            projects.map((project) => (
-              <tr
-                key={project.id}
-                className="cursor-pointer transition hover:bg-blue-50"
-                onClick={() => onProjectClick(project)}
-              >
-                <td className="px-4 py-3 text-slate-700">
-                  {departmentLabels[project.requesting_department] ?? project.requesting_department}
-                </td>
-                <td className="px-4 py-3 text-slate-900">{project.title}</td>
-                <td className="px-4 py-3 text-slate-700">{formatNumber(project.score_raw)}</td>
-                <td className="px-4 py-3 font-semibold text-blue-700">{formatNumber(project.score_weighted)}</td>
-                <td className="px-4 py-3 text-slate-700">{project.impact_score.toString()}</td>
-                <td className="px-4 py-3 text-slate-700">{project.frequency_score.toString()}</td>
-                <td className="px-4 py-3 text-slate-700">
-                  {urgencyLabels[project.urgency_level] ?? project.urgency_level}
-                </td>
-                <td className="px-4 py-3">
-                  <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
-                    {statusLabels[project.status] ?? project.status}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-slate-700">{formatDate(project.created_at)}</td>
-              </tr>
-            ))
+            projects.map((project) => {
+              const hasImpactOverride = project.impact_score_considered !== null;
+              const hasFrequencyOverride = project.frequency_score_considered !== null;
+              const hasUrgencyOverride = project.urgency_level_considered !== null;
+
+              const effectiveImpact = hasImpactOverride ? project.impact_score_considered : project.impact_score;
+              const effectiveFrequency = hasFrequencyOverride ? project.frequency_score_considered : project.frequency_score;
+              const effectiveUrgency = hasUrgencyOverride ? project.urgency_level_considered! : project.urgency_level;
+
+              return (
+                <tr
+                  key={project.id}
+                  className="cursor-pointer transition hover:bg-blue-50"
+                  onClick={() => onProjectClick(project)}
+                >
+                  <td className="px-4 py-3 text-slate-700">
+                    {departmentLabels[project.requesting_department] ?? project.requesting_department}
+                  </td>
+                  <td className="px-4 py-3 text-slate-900">{project.title}</td>
+                  <td className="px-4 py-3 text-slate-700">{formatNumber(project.score_raw)}</td>
+                  <td className="px-4 py-3 font-semibold text-blue-700">{formatNumber(project.score_weighted)}</td>
+                  <td className="px-4 py-3 text-slate-700">
+                    <div className="flex items-center gap-1">
+                      <span>{effectiveImpact}</span>
+                      {hasImpactOverride && (
+                        <span
+                          className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700"
+                          title={`Original: ${project.impact_score}`}
+                        >
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-slate-700">
+                    <div className="flex items-center gap-1">
+                      <span>{effectiveFrequency}</span>
+                      {hasFrequencyOverride && (
+                        <span
+                          className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700"
+                          title={`Original: ${project.frequency_score}`}
+                        >
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-slate-700">
+                    <div className="flex items-center gap-1">
+                      <span>{urgencyLabels[effectiveUrgency] ?? effectiveUrgency}</span>
+                      {hasUrgencyOverride && (
+                        <span
+                          className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700"
+                          title={`Original: ${urgencyLabels[project.urgency_level]}`}
+                        >
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-slate-700">
+                    {project.development_points ? (
+                      <div className="flex flex-col">
+                        <span className="font-medium">{project.development_points} pts</span>
+                        <span className="text-xs text-slate-500">
+                          {(() => {
+                            const days = (project.development_points / 15) * 10;
+                            if (days < 5) return `~${days.toFixed(1)} días`;
+                            return `~${(days / 5).toFixed(1)} sem`;
+                          })()}
+                        </span>
+                      </div>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
+                      {statusLabels[project.status] ?? project.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-slate-700">{formatDate(project.created_at)}</td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>
@@ -135,4 +196,3 @@ const ProjectsTableComponent = ({
 };
 
 export const ProjectsTable = memo(ProjectsTableComponent);
-

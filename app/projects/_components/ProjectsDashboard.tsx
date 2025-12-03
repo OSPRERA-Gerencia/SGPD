@@ -8,11 +8,13 @@ import type { ProjectListSortField, SortDirection } from '@/lib/repositories/Pro
 import {
   getProjectAllocationsAction,
   updateWeightsAndRecalculateScores,
+  updateProjectDetailsAction,
   type ProjectAllocationSummary,
 } from '../actions';
 import { ProjectsTable } from './ProjectsTable';
 import { PriorityWeightsPanel } from './PriorityWeightsPanel';
 import { ProjectDetailSheet } from './ProjectDetailSheet';
+import { ProjectEditModal } from './ProjectEditModal';
 
 type ProjectsDashboardProps = {
   initialProjects: ProjectsRow[];
@@ -111,6 +113,8 @@ export function ProjectsDashboard({ initialProjects, initialWeights }: ProjectsD
 
   const [isSavingWeights, setIsSavingWeights] = useState<boolean>(false);
   const [weightsError, setWeightsError] = useState<string | null>(null);
+
+  const [editingProject, setEditingProject] = useState<ProjectsRow | null>(null);
 
   const departmentOptions = useMemo<DepartmentOption[]>(() => {
     const unique = new Set(
@@ -241,7 +245,17 @@ export function ProjectsDashboard({ initialProjects, initialWeights }: ProjectsD
   };
 
   const handleProjectClick = (project: ProjectsRow): void => {
-    setSelectedProject(project);
+    setEditingProject(project);
+  };
+
+  const handleSaveProjectDetails = async (projectId: string, updates: Partial<ProjectsRow>) => {
+    const result = await updateProjectDetailsAction(projectId, updates);
+    if (result.success) {
+      // Update project in list
+      setProjects(prev => prev.map(p => p.id === projectId ? result.project : p));
+    } else {
+      throw new Error(result.error);
+    }
   };
 
   const handleCloseDetail = (): void => {
@@ -418,6 +432,12 @@ export function ProjectsDashboard({ initialProjects, initialWeights }: ProjectsD
         statusLabels={statusLabels}
         urgencyLabels={urgencyLabels}
         departmentLabels={departmentLabels}
+      />
+
+      <ProjectEditModal
+        project={editingProject}
+        onClose={() => setEditingProject(null)}
+        onSave={handleSaveProjectDetails}
       />
     </div>
   );

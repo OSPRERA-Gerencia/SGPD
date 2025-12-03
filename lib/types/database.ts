@@ -64,6 +64,21 @@ export interface ProjectsRow {
   implemented_at: string | null;
   closed_at: string | null;
   management_comments: string | null;
+  // Override/considered values (set by review team)
+  impact_score_considered: number | null;
+  frequency_score_considered: number | null;
+  urgency_level_considered: UrgencyLevel | null;
+  // Custom priority weights per project
+  custom_impact_weight: number | null;
+  custom_frequency_weight: number | null;
+  custom_urgency_weight: number | null;
+  // Development size
+  development_points: number | null;
+  functional_points: number | null;
+  // Review tracking
+  is_reviewed_by_team: boolean;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
 }
 
 export interface ProjectsInsert {
@@ -124,6 +139,21 @@ export interface ProjectsUpdate {
   management_comments?: string | null;
   short_description?: string | null;
   context?: string | null;
+  // Override/considered values
+  impact_score_considered?: number | null;
+  frequency_score_considered?: number | null;
+  urgency_level_considered?: UrgencyLevel | null;
+  // Custom weights
+  custom_impact_weight?: number | null;
+  custom_frequency_weight?: number | null;
+  custom_urgency_weight?: number | null;
+  // Development size
+  development_points?: number | null;
+  functional_points?: number | null;
+  // Review tracking
+  is_reviewed_by_team?: boolean;
+  reviewed_at?: string | null;
+  reviewed_by?: string | null;
 }
 
 export interface SprintsRow {

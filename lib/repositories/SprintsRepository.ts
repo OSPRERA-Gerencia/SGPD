@@ -174,5 +174,19 @@ export class SprintsRepository {
 
     return data ?? null;
   }
+
+  static async deleteSprint(id: string): Promise<void> {
+    if (!isSupabaseConfigured()) {
+      // In-memory implementation would go here if needed
+      return;
+    }
+
+    const supabase = getClient();
+    const { error } = await supabase.from('sprints').delete().eq('id', id);
+
+    if (error) {
+      throw new Error(`Error al eliminar el sprint: ${error.message}`);
+    }
+  }
 }
 

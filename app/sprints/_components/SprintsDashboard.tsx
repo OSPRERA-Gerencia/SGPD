@@ -9,6 +9,7 @@ import {
   type SprintDetail,
   type SprintSummary,
   updateSprintAllocationAction,
+  deleteSprintAction,
 } from '../actions';
 import type { ProjectsRow, SprintAllocationStatus, SprintStatus } from '@/lib/types/database';
 
@@ -186,9 +187,10 @@ export function SprintsDashboard({ initialSummaries, initialDetail }: SprintsDas
   };
 
   const handleSprintFieldChange = (field: keyof SprintFormState) => (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const value = event.currentTarget.value;
     setSprintFormState((prev) => ({
       ...prev,
-      [field]: event.currentTarget.value,
+      [field]: value,
     }));
   };
 
@@ -263,9 +265,10 @@ export function SprintsDashboard({ initialSummaries, initialDetail }: SprintsDas
   };
 
   const handleAllocationFieldChange = (field: keyof AllocationFormState) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const value = event.currentTarget.value;
     setAllocationFormState((prev) => ({
       ...prev,
-      [field]: event.currentTarget.value,
+      [field]: value,
     }));
   };
 
@@ -345,11 +348,18 @@ export function SprintsDashboard({ initialSummaries, initialDetail }: SprintsDas
                 const progress = calculateProgress(summary.allocatedPoints, summary.sprint.capacity_points);
                 const isActive = summary.sprint.id === selectedSprintId;
                 return (
-                  <button
+                  <div
                     key={summary.sprint.id}
-                    type="button"
+                    role="button"
+                    tabIndex={0}
                     onClick={() => handleSelectSprint(summary.sprint.id)}
-                    className={`w-full rounded-lg border px-4 py-3 text-left transition ${
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleSelectSprint(summary.sprint.id);
+                      }
+                    }}
+                    className={`w-full rounded-lg border px-4 py-3 text-left transition cursor-pointer ${
                       isActive
                         ? 'border-blue-500 bg-blue-50 shadow-sm'
                         : 'border-slate-200 bg-white hover:border-blue-300'
@@ -385,7 +395,7 @@ export function SprintsDashboard({ initialSummaries, initialDetail }: SprintsDas
                       </span>
                       <span>{SPRINT_STATUS_OPTIONS[summary.sprint.status]}</span>
                     </div>
-                  </button>
+                  </div>
                 );
               })
             )}
@@ -646,21 +656,51 @@ export function SprintsDashboard({ initialSummaries, initialDetail }: SprintsDas
               <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{sprintFormError}</div>
             ) : null}
 
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                onClick={closeSprintModal}
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:bg-blue-300"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Guardando...' : 'Guardar'}
-              </button>
+            <div className="flex justify-between gap-3">
+              {sprintFormState.id && (
+                <button
+                  type="button"
+                  className="rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                  onClick={() => {
+                    if (confirm('¿Estás seguro de que querés eliminar este sprint?')) {
+                      startSubmitTransition(() => {
+                        deleteSprintAction(sprintFormState.id!)
+                          .then((result) => {
+                            if (!result.success) {
+                              setSprintFormError(result.error);
+                              return;
+                            }
+                            setSummaries(result.summaries);
+                            setSelectedDetail(result.detail);
+                            setSelectedSprintId(result.detail?.summary.sprint.id ?? null);
+                            closeSprintModal();
+                          })
+                          .catch((error) => {
+                            setSprintFormError(error instanceof Error ? error.message : 'Error al eliminar el sprint');
+                          });
+                      });
+                    }
+                  }}
+                >
+                  Eliminar
+                </button>
+              )}
+              <div className="flex gap-3 ml-auto">
+                <button
+                  type="button"
+                  className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  onClick={closeSprintModal}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:bg-blue-300"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Guardando...' : 'Guardar'}
+                </button>
+              </div>
             </div>
           </form>
         </Modal>

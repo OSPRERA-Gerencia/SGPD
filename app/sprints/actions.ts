@@ -69,7 +69,8 @@ const toDetail = async (sprint: SprintsRow): Promise<SprintDetail> => {
   const allocationsWithProjects = await SprintAllocationsRepository.listAllocationsWithProjectBySprint(sprint.id);
   const assignedProjectIds = new Set(allocationsWithProjects.map((item) => item.project?.id).filter(Boolean) as string[]);
 
-  const topProjects = await ProjectsRepository.listTopProjects(BACKLOG_LIMIT);
+  // Only show prioritized projects in the backlog
+  const topProjects = await ProjectsRepository.listTopProjects(BACKLOG_LIMIT, { status: 'prioritized' });
   const backlog = topProjects.filter((project) => !assignedProjectIds.has(project.id));
 
   const orderedAllocations = allocationsWithProjects.map((allocation) => ({
@@ -202,6 +203,36 @@ export async function createOrUpdateSprintAction(formData: FormData): Promise<Sp
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error al guardar el sprint.';
+    return {
+      success: false,
+      error: message,
+    };
+  }
+}
+
+export async function deleteSprintAction(sprintId: string): Promise<SprintOperationResult> {
+  try {
+    // First check if there are any allocations
+    const allocations = await SprintAllocationsRepository.listAllocationsBySprint(sprintId);
+    if (allocations.length > 0) {
+      return {
+        success: false,
+        error: 'No se puede eliminar un sprint con proyectos asignados. Eliminá las asignaciones primero.',
+      };
+    }
+
+    await SprintsRepository.deleteSprint(sprintId);
+    
+    const summaries = await listSprintSummaries();
+    const detail = summaries.length > 0 ? await toDetail(summaries[0].sprint) : null;
+
+    return {
+      success: true,
+      summaries,
+      detail,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Error al eliminar el sprint.';
     return {
       success: false,
       error: message,
