@@ -107,6 +107,18 @@ const projectsState: ProjectsRow[] = [
     implemented_at: null,
     closed_at: null,
     management_comments: 'En análisis por el equipo de arquitectura.',
+    // Added missing required fields with defaults for existing memory items
+    impact_score_considered: null,
+    frequency_score_considered: null,
+    urgency_level_considered: null,
+    custom_impact_weight: null,
+    custom_frequency_weight: null,
+    custom_urgency_weight: null,
+    development_points: null,
+    functional_points: null,
+    is_reviewed_by_team: false,
+    reviewed_at: null,
+    reviewed_by: null,
   }),
   createProjectRow({
     id: randomUUID(),
@@ -145,6 +157,18 @@ const projectsState: ProjectsRow[] = [
     implemented_at: null,
     closed_at: null,
     management_comments: 'Revisión de herramientas disponibles.',
+    // Added missing required fields with defaults for existing memory items
+    impact_score_considered: null,
+    frequency_score_considered: null,
+    urgency_level_considered: null,
+    custom_impact_weight: null,
+    custom_frequency_weight: null,
+    custom_urgency_weight: null,
+    development_points: null,
+    functional_points: null,
+    is_reviewed_by_team: false,
+    reviewed_at: null,
+    reviewed_by: null,
   }),
   createProjectRow({
     id: randomUUID(),
@@ -183,6 +207,18 @@ const projectsState: ProjectsRow[] = [
     implemented_at: null,
     closed_at: null,
     management_comments: null,
+    // Added missing required fields with defaults for existing memory items
+    impact_score_considered: null,
+    frequency_score_considered: null,
+    urgency_level_considered: null,
+    custom_impact_weight: null,
+    custom_frequency_weight: null,
+    custom_urgency_weight: null,
+    development_points: null,
+    functional_points: null,
+    is_reviewed_by_team: false,
+    reviewed_at: null,
+    reviewed_by: null,
   }),
 ];
 
@@ -393,6 +429,18 @@ export const memoryProjects = {
       implemented_at: payload.implemented_at ?? null,
       closed_at: payload.closed_at ?? null,
       management_comments: payload.management_comments ?? null,
+      // Initialize new required fields
+      impact_score_considered: null,
+      frequency_score_considered: null,
+      urgency_level_considered: null,
+      custom_impact_weight: null,
+      custom_frequency_weight: null,
+      custom_urgency_weight: null,
+      development_points: null,
+      functional_points: null,
+      is_reviewed_by_team: false,
+      reviewed_at: null,
+      reviewed_by: null,
     };
 
     state.projects.push(project);
