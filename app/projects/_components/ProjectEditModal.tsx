@@ -8,6 +8,7 @@ type ProjectEditModalProps = {
     project: ProjectsRow | null;
     onClose: () => void;
     onSave: (projectId: string, updates: Partial<ProjectsRow>) => Promise<void>;
+    departmentLabels?: Record<string, string>;
 };
 
 const urgencyOptions: Array<{ value: UrgencyLevel; label: string }> = [
@@ -28,9 +29,10 @@ const statusOptions: Array<{ value: ProjectStatus; label: string }> = [
     { value: 'rejected', label: 'Rechazado' },
 ];
 
-export function ProjectEditModal({ project, onClose, onSave }: ProjectEditModalProps): React.ReactElement | null {
+export function ProjectEditModal({ project, onClose, onSave, departmentLabels = {} }: ProjectEditModalProps): React.ReactElement | null {
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showDetails, setShowDetails] = useState(false);
 
     // Override values
     const [status, setStatus] = useState<ProjectStatus>(project?.status ?? 'new');
@@ -96,12 +98,15 @@ export function ProjectEditModal({ project, onClose, onSave }: ProjectEditModalP
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Project Info */}
+                    {/* Project Info & Details */}
                     <div className="rounded-lg bg-slate-50 p-4">
                         <div className="mb-4 flex items-start justify-between">
                             <div>
                                 <h3 className="font-semibold text-slate-900">{project.title}</h3>
                                 <p className="text-sm text-slate-600">{project.short_description}</p>
+                                <p className="mt-1 text-xs text-slate-500">
+                                    Solicitado por: <span className="font-medium">{departmentLabels[project.requesting_department] ?? project.requesting_department}</span>
+                                </p>
                             </div>
                             <div className="min-w-[200px]">
                                 <label className="text-xs font-medium text-slate-500">Estado</label>
@@ -118,6 +123,69 @@ export function ProjectEditModal({ project, onClose, onSave }: ProjectEditModalP
                                 </select>
                             </div>
                         </div>
+
+                        {/* Toggle Details */}
+                        <button
+                            type="button"
+                            onClick={() => setShowDetails(!showDetails)}
+                            className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-800"
+                        >
+                            {showDetails ? 'Ocultar detalles de la solicitud' : 'Ver detalles de la solicitud'}
+                            <svg
+                                className={`h-4 w-4 transition-transform ${showDetails ? 'rotate-180' : ''}`}
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        {showDetails && (
+                            <div className="mt-4 space-y-4 border-t border-slate-200 pt-4">
+                                <div>
+                                    <h4 className="text-sm font-medium text-slate-900">Problema</h4>
+                                    <p className="mt-1 whitespace-pre-wrap text-sm text-slate-600">{project.problem_description}</p>
+                                </div>
+                                {project.context && (
+                                    <div>
+                                        <h4 className="text-sm font-medium text-slate-900">Contexto</h4>
+                                        <p className="mt-1 whitespace-pre-wrap text-sm text-slate-600">{project.context}</p>
+                                    </div>
+                                )}
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <div>
+                                        <h4 className="text-sm font-medium text-slate-900">Impacto (Original: {project.impact_score})</h4>
+                                        <p className="mt-1 text-sm text-slate-600">{project.impact_description ?? 'Sin descripción'}</p>
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-medium text-slate-900">Frecuencia (Original: {project.frequency_score})</h4>
+                                        <p className="mt-1 text-sm text-slate-600">{project.frequency_description ?? 'Sin descripción'}</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-medium text-slate-900">Dependencias</h4>
+                                    <p className="mt-1 text-sm text-slate-600">
+                                        {project.has_external_dependencies ? 'Sí' : 'No'}
+                                        {project.dependencies_detail && ` - ${project.dependencies_detail}`}
+                                    </p>
+                                    {project.other_departments_involved && (
+                                        <p className="mt-1 text-sm text-slate-600">
+                                            <span className="font-medium">Otras áreas:</span> {project.other_departments_involved}
+                                        </p>
+                                    )}
+                                </div>
+                                {project.contact_name && (
+                                    <div>
+                                        <h4 className="text-sm font-medium text-slate-900">Contacto</h4>
+                                        <p className="mt-1 text-sm text-slate-600">
+                                            {project.contact_name}
+                                            {project.contact_email && ` (${project.contact_email})`}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Override Values Section */}

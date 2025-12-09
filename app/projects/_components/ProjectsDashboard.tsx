@@ -438,6 +438,7 @@ export function ProjectsDashboard({ initialProjects, initialWeights }: ProjectsD
         project={editingProject}
         onClose={() => setEditingProject(null)}
         onSave={handleSaveProjectDetails}
+        departmentLabels={departmentLabels}
       />
     </div>
   );
