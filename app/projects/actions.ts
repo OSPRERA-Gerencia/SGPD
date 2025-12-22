@@ -80,6 +80,13 @@ export async function createProjectAction(values: ProjectFormValues): Promise<Cr
     // Convertir el código de gerencia al nombre en español
     const departmentName = departmentLabels[data.requestingDepartment] ?? data.requestingDepartment;
 
+    // Calclulate frequency score if fields are provided
+    let frequencyScore = data.frequencyScore;
+    if (data.frequencyNumber && data.frequencyUnit) {
+      const { calculateFrequencyScore } = await import('@/lib/priorityScoring');
+      frequencyScore = calculateFrequencyScore(data.frequencyNumber, data.frequencyUnit as any);
+    }
+
     const project = await ProjectsRepository.createProject({
       requestingDepartment: departmentName,
       title: data.title,
@@ -89,7 +96,9 @@ export async function createProjectAction(values: ProjectFormValues): Promise<Cr
       impactDescription: toNullable(data.impactDescription ?? undefined),
       impactScore: data.impactScore,
       frequencyDescription: toNullable(data.frequencyDescription ?? undefined),
-      frequencyScore: data.frequencyScore,
+      frequencyScore: frequencyScore,
+      frequencyNumber: data.frequencyNumber,
+      frequencyUnit: data.frequencyUnit,
       urgencyLevel: data.urgencyLevel,
       hasExternalDependencies: data.hasExternalDependencies,
       dependenciesDetail: toNullable(data.dependenciesDetail ?? undefined),

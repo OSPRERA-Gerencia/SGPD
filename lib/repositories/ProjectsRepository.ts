@@ -42,6 +42,8 @@ export type ProjectCreationInput = {
   impactScore: number;
   frequencyDescription?: string | null;
   frequencyScore: number;
+  frequencyNumber?: number | null;
+  frequencyUnit?: string | null;
   urgencyLevel: UrgencyLevel;
   hasExternalDependencies?: boolean;
   dependenciesDetail?: string | null;
@@ -106,6 +108,8 @@ export class ProjectsRepository {
       impact_score: input.impactScore,
       frequency_description: input.frequencyDescription ?? null,
       frequency_score: input.frequencyScore,
+      frequency_number: input.frequencyNumber ?? null,
+      frequency_unit: input.frequencyUnit ?? null,
       urgency_level: input.urgencyLevel,
       urgency_score: urgencyScore,
       score_raw: scoreRaw,

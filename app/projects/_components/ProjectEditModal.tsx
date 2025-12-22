@@ -40,14 +40,18 @@ export function ProjectEditModal({ project, onClose, onSave, departmentLabels = 
     const [frequencyConsidered, setFrequencyConsidered] = useState<number | null>(project?.frequency_score_considered ?? null);
     const [urgencyConsidered, setUrgencyConsidered] = useState<UrgencyLevel | null>(project?.urgency_level_considered ?? null);
 
-    // Custom weights
-    const [customImpactWeight, setCustomImpactWeight] = useState<number | null>(project?.custom_impact_weight ?? null);
-    const [customFrequencyWeight, setCustomFrequencyWeight] = useState<number | null>(project?.custom_frequency_weight ?? null);
-    const [customUrgencyWeight, setCustomUrgencyWeight] = useState<number | null>(project?.custom_urgency_weight ?? null);
-
     // Development points
     const [developmentPoints, setDevelopmentPoints] = useState<number | null>(project?.development_points ?? null);
     const [functionalPoints, setFunctionalPoints] = useState<number | null>(project?.functional_points ?? null);
+    const [userPoints, setUserPoints] = useState<number | null>(project?.user_points ?? null);
+
+    // New frequency fields
+    const [frequencyNumber, setFrequencyNumber] = useState<number>(project?.frequency_number ?? 1);
+    const [frequencyUnit, setFrequencyUnit] = useState<string>(project?.frequency_unit ?? 'week');
+    const [contactDepartment, setContactDepartment] = useState<string>(project?.contact_department ?? '');
+    const [contactName, setContactName] = useState<string>(project?.contact_name ?? '');
+    const [contactEmail, setContactEmail] = useState<string>(project?.contact_email ?? '');
+    const [contactPhone, setContactPhone] = useState<string>(project?.contact_phone ?? '');
 
     if (!project) return null;
 
@@ -67,11 +71,16 @@ export function ProjectEditModal({ project, onClose, onSave, departmentLabels = 
                 impact_score_considered: impactConsidered,
                 frequency_score_considered: frequencyConsidered,
                 urgency_level_considered: urgencyConsidered,
-                custom_impact_weight: customImpactWeight,
-                custom_frequency_weight: customFrequencyWeight,
-                custom_urgency_weight: customUrgencyWeight,
                 development_points: developmentPoints,
                 functional_points: functionalPoints,
+                user_points: userPoints,
+                // Structured data
+                frequency_number: frequencyNumber,
+                frequency_unit: frequencyUnit,
+                contact_department: contactDepartment,
+                contact_name: contactName,
+                contact_email: contactEmail,
+                contact_phone: contactPhone,
                 // Mark as reviewed if override values are set
                 is_reviewed_by_team: hasOverrides,
                 reviewed_at: hasOverrides ? new Date().toISOString() : null,
@@ -175,15 +184,50 @@ export function ProjectEditModal({ project, onClose, onSave, departmentLabels = 
                                         </p>
                                     )}
                                 </div>
-                                {project.contact_name && (
-                                    <div>
-                                        <h4 className="text-sm font-medium text-slate-900">Contacto</h4>
-                                        <p className="mt-1 text-sm text-slate-600">
-                                            {project.contact_name}
-                                            {project.contact_email && ` (${project.contact_email})`}
-                                        </p>
+                                <div>
+                                    <h4 className="text-sm font-medium text-slate-900">Usuario</h4>
+                                    <div className="mt-1 grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[10px] uppercase text-slate-400">Nombre</label>
+                                            <input
+                                                type="text"
+                                                value={contactName}
+                                                onChange={(e) => setContactName(e.target.value)}
+                                                className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] uppercase text-slate-400">Gerencia</label>
+                                            <select
+                                                value={contactDepartment}
+                                                onChange={(e) => setContactDepartment(e.target.value)}
+                                                className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                                            >
+                                                {Object.entries(departmentLabels).map(([val, lab]) => (
+                                                    <option key={val} value={val}>{lab}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] uppercase text-slate-400">Email</label>
+                                            <input
+                                                type="email"
+                                                value={contactEmail}
+                                                onChange={(e) => setContactEmail(e.target.value)}
+                                                className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] uppercase text-slate-400">Teléfono</label>
+                                            <input
+                                                type="text"
+                                                value={contactPhone}
+                                                onChange={(e) => setContactPhone(e.target.value)}
+                                                className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                                            />
+                                        </div>
                                     </div>
-                                )}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -219,15 +263,39 @@ export function ProjectEditModal({ project, onClose, onSave, departmentLabels = 
                             {/* Frequency */}
                             <div>
                                 <label className="text-sm font-medium text-slate-700">
-                                    Frecuencia
-                                    <span className="ml-2 text-xs text-slate-500">(Original: {project.frequency_score})</span>
+                                    Frecuencia (Actual: {project.frequency_score})
                                 </label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="number"
+                                        value={frequencyNumber}
+                                        onChange={(e) => setFrequencyNumber(Number(e.target.value))}
+                                        className="mt-1 w-20 rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500"
+                                    />
+                                    <select
+                                        value={frequencyUnit}
+                                        onChange={(e) => setFrequencyUnit(e.target.value)}
+                                        className="mt-1 flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500"
+                                    >
+                                        <option value="day">Día</option>
+                                        <option value="week">Semana</option>
+                                        <option value="month">Mes</option>
+                                    </select>
+                                </div>
+                                <p className="mt-1 text-xs text-slate-500">
+                                    Score sugerido: {(() => {
+                                        if (frequencyUnit === 'day') return frequencyNumber > 1 ? 5 : 4;
+                                        if (frequencyUnit === 'week') return frequencyNumber >= 1 ? 3 : 2;
+                                        if (frequencyUnit === 'month') return frequencyNumber >= 4 ? 4 : (frequencyNumber >= 2 ? 2 : 1);
+                                        return 1;
+                                    })()}
+                                </p>
                                 <select
                                     value={frequencyConsidered ?? ''}
                                     onChange={(e) => setFrequencyConsidered(e.target.value ? Number(e.target.value) : null)}
-                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                                    className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                                 >
-                                    <option value="">Usar original ({project.frequency_score})</option>
+                                    <option value="">Usar calculado</option>
                                     <option value="1">1 - Muy baja</option>
                                     <option value="2">2 - Baja</option>
                                     <option value="3">3 - Media</option>
@@ -258,59 +326,10 @@ export function ProjectEditModal({ project, onClose, onSave, departmentLabels = 
                         </div>
                     </section>
 
-                    {/* Custom Weights Section */}
-                    <section>
-                        <h3 className="mb-4 text-lg font-semibold text-slate-900">Ponderación Personalizada</h3>
-                        <p className="mb-4 text-sm text-slate-600">
-                            Definí pesos personalizados para este proyecto. Si los dejás en blanco, se usará la ponderación global.
-                        </p>
-
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            <div>
-                                <label className="text-sm font-medium text-slate-700">Peso de Impacto</label>
-                                <input
-                                    type="number"
-                                    step="0.1"
-                                    min="0"
-                                    value={customImpactWeight ?? ''}
-                                    onChange={(e) => setCustomImpactWeight(e.target.value ? Number(e.target.value) : null)}
-                                    placeholder="Usar global"
-                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="text-sm font-medium text-slate-700">Peso de Frecuencia</label>
-                                <input
-                                    type="number"
-                                    step="0.1"
-                                    min="0"
-                                    value={customFrequencyWeight ?? ''}
-                                    onChange={(e) => setCustomFrequencyWeight(e.target.value ? Number(e.target.value) : null)}
-                                    placeholder="Usar global"
-                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="text-sm font-medium text-slate-700">Peso de Urgencia</label>
-                                <input
-                                    type="number"
-                                    step="0.1"
-                                    min="0"
-                                    value={customUrgencyWeight ?? ''}
-                                    onChange={(e) => setCustomUrgencyWeight(e.target.value ? Number(e.target.value) : null)}
-                                    placeholder="Usar global"
-                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                                />
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* Development Size Section */}
+                    {/* Size Section */}
                     <section>
                         <h3 className="mb-4 text-lg font-semibold text-slate-900">Tamaño del Proyecto</h3>
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                             <div>
                                 <label className="text-sm font-medium text-slate-700">Puntos de Desarrollo</label>
                                 <select
@@ -360,11 +379,26 @@ export function ProjectEditModal({ project, onClose, onSave, departmentLabels = 
                                     </p>
                                 )}
                             </div>
+
+                            <div>
+                                <label className="text-sm font-medium text-slate-700">Puntos de Usuario</label>
+                                <select
+                                    value={userPoints ?? ''}
+                                    onChange={(e) => setUserPoints(e.target.value !== '' ? Number(e.target.value) : null)}
+                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                                >
+                                    <option value="">Sin definir</option>
+                                    <option value="0">0 puntos</option>
+                                    {[...Array(15)].map((_, i) => (
+                                        <option key={i + 1} value={i + 1}>{i + 1} {i === 0 ? 'punto' : 'puntos'}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
 
                         {/* Conversion Table */}
                         <div className="mt-4">
-                            <h4 className="mb-2 text-sm font-medium text-slate-700">Tabla de Referencia</h4>
+                            <h4 className="mb-2 text-sm font-medium text-slate-700">Tabla de Referencia (Desarrollo/Funcional)</h4>
                             <div className="rounded-md border border-slate-200">
                                 <table className="min-w-full text-sm">
                                     <thead className="bg-slate-50">

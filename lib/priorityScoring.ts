@@ -114,3 +114,32 @@ export const calculateProjectWeightedScore = (project: ProjectsRow, globalWeight
   return calculateWeightedScore(priorityInputs, effectiveWeights);
 };
 
+/**
+ * Calculates frequency score based on quantity and unit
+ * Scale:
+ * - >1 per day -> 5
+ * - 1 per day -> 4
+ * - 1 per week -> 3
+ * - 1 per 2 weeks -> 2
+ * - 1 per month -> 1
+ */
+export const calculateFrequencyScore = (number: number, unit: 'day' | 'week' | 'month'): number => {
+  if (unit === 'day') {
+    return number > 1 ? 5 : 4;
+  }
+
+  if (unit === 'week') {
+    if (number >= 1) return 3;
+    // If someone puts 0.5 per week (once every 2 weeks), we catch it or handle it in month
+  }
+
+  if (unit === 'month') {
+    if (number >= 4) return 4; // 1 per day approx
+    if (number >= 2) return 2; // User explicitly said 1 every 2 weeks is 2
+    if (number >= 1) return 1;
+  }
+
+  // Fallback for intermediate or low values
+  return 1;
+};
+

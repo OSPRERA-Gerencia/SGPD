@@ -86,3 +86,4 @@ ALTER TABLE projects ADD CONSTRAINT check_functional_points
 COMMENT ON COLUMN projects.development_points IS 'Estimated development size in points (0-15 scale, where 15 points = 2 weeks)';
 COMMENT ON COLUMN projects.functional_points IS 'Functional complexity in points (0-15 scale)';
 
+

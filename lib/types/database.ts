@@ -47,6 +47,8 @@ export interface ProjectsRow {
   impact_score: number;
   frequency_description: string | null;
   frequency_score: number;
+  frequency_number: number | null;
+  frequency_unit: string | null;
   urgency_level: UrgencyLevel;
   urgency_score: number;
   score_raw: number;
@@ -75,6 +77,7 @@ export interface ProjectsRow {
   // Development size
   development_points: number | null;
   functional_points: number | null;
+  user_points: number | null;
   // Review tracking
   is_reviewed_by_team: boolean;
   reviewed_at: string | null;
@@ -87,6 +90,8 @@ export interface ProjectsInsert {
   problem_description: string;
   impact_score: number;
   frequency_score: number;
+  frequency_number?: number | null;
+  frequency_unit?: string | null;
   urgency_level: UrgencyLevel;
   urgency_score: number;
   score_raw: number;
@@ -120,6 +125,8 @@ export interface ProjectsUpdate {
   impact_score?: number;
   frequency_description?: string | null;
   frequency_score?: number;
+  frequency_number?: number | null;
+  frequency_unit?: string | null;
   urgency_level?: UrgencyLevel;
   urgency_score?: number;
   score_raw?: number;
@@ -150,6 +157,7 @@ export interface ProjectsUpdate {
   // Development size
   development_points?: number | null;
   functional_points?: number | null;
+  user_points?: number | null;
   // Review tracking
   is_reviewed_by_team?: boolean;
   reviewed_at?: string | null;

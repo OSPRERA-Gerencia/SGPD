@@ -71,10 +71,12 @@ export const projectFormSchema = z.object({
   contactName: z
     .string()
     .trim()
-    .min(1, { message: 'El nombre referente es obligatorio.' }),
-  contactDepartment: optionalTrimmedString,
+    .min(1, { message: 'El nombre del usuario es obligatorio.' }),
+  contactDepartment: z.enum(REQUESTING_DEPARTMENT_VALUES).optional(),
   contactEmail: optionalEmailSchema,
   contactPhone: optionalTrimmedString,
+  frequencyNumber: z.coerce.number().min(1, { message: 'La cantidad debe ser al menos 1.' }).optional(),
+  frequencyUnit: z.enum(['day', 'week', 'month']).optional(),
 });
 
 export type ProjectFormValues = z.infer<typeof projectFormSchema>;

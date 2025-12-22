@@ -172,10 +172,7 @@ export function ProjectsDashboard({ initialProjects, initialWeights }: ProjectsD
       let aValue: number;
       let bValue: number;
 
-      if (sortField === 'score_raw') {
-        aValue = getNumericValue(a.score_raw);
-        bValue = getNumericValue(b.score_raw);
-      } else if (sortField === 'score_weighted') {
+      if (sortField === 'score_weighted') {
         aValue = getNumericValue(a.score_weighted);
         bValue = getNumericValue(b.score_weighted);
       } else {

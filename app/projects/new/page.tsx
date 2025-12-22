@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -51,6 +51,12 @@ const textareaClasses = `${inputClasses} min-h-[120px]`;
 const labelClasses = 'text-sm font-medium text-slate-700';
 const errorClasses = 'mt-1 text-sm text-red-600';
 
+const frequencyUnits = [
+  { value: 'day', label: 'Día' },
+  { value: 'week', label: 'Semana' },
+  { value: 'month', label: 'Mes' },
+];
+
 export default function NewProjectPage(): React.ReactElement {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -69,12 +75,14 @@ export default function NewProjectPage(): React.ReactElement {
       impactScore: 3,
       frequencyDescription: '',
       frequencyScore: 3,
+      frequencyNumber: 1,
+      frequencyUnit: 'week',
       urgencyLevel: 'medium',
       hasExternalDependencies: false,
       dependenciesDetail: '',
       otherDepartmentsInvolved: '',
       contactName: '',
-      contactDepartment: '',
+      contactDepartment: 'general_management',
       contactEmail: '',
       contactPhone: '',
     },
@@ -91,6 +99,24 @@ export default function NewProjectPage(): React.ReactElement {
   } = form;
 
   const hasExternalDependencies = watch('hasExternalDependencies');
+  const frequencyNumber = watch('frequencyNumber');
+  const frequencyUnit = watch('frequencyUnit');
+
+  // Logic to show calculated score in UI (informative)
+  const currentFrequencyScore = useMemo(() => {
+    if (frequencyNumber && frequencyUnit) {
+      // Small trick to avoid importing logic here if we don't want to duplicate, 
+      // but simpler to just re-implement or import
+      const calculate = (n: number, u: string) => {
+        if (u === 'day') return n > 1 ? 5 : 4;
+        if (u === 'week') return n >= 1 ? 3 : 2;
+        if (u === 'month') return n >= 4 ? 4 : (n >= 2 ? 2 : 1);
+        return 1;
+      };
+      return calculate(frequencyNumber, frequencyUnit);
+    }
+    return 3;
+  }, [frequencyNumber, frequencyUnit]);
 
   const onSubmit = handleSubmit(
     (values) => {
@@ -326,7 +352,7 @@ export default function NewProjectPage(): React.ReactElement {
         </section>
 
         <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-medium text-slate-900">Frecuencia / Volumen</h2>
+          <h2 className="text-lg font-medium text-slate-900">Frecuencia del problema</h2>
           <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
             <div className="md:col-span-2">
               <label className={labelClasses} htmlFor="frequencyDescription">
@@ -337,37 +363,52 @@ export default function NewProjectPage(): React.ReactElement {
                 {...register('frequencyDescription')}
                 className={textareaClasses}
                 aria-invalid={errors.frequencyDescription ? 'true' : 'false'}
+                placeholder="Ej: Ocurre cada vez que un usuario intenta..."
               />
               {errors.frequencyDescription?.message ? (
                 <p className={errorClasses}>{errors.frequencyDescription.message}</p>
               ) : null}
             </div>
 
-            <div>
-              <label className={labelClasses} htmlFor="frequencyScore">
-                Puntaje de frecuencia *
-              </label>
-              <Controller
-                name="frequencyScore"
-                control={control}
-                render={({ field }) => (
-                  <select
-                    id="frequencyScore"
-                    className={inputClasses}
-                    value={field.value?.toString() ?? ''}
-                    onChange={(event) => field.onChange(Number(event.currentTarget.value))}
-                    aria-invalid={errors.frequencyScore ? 'true' : 'false'}
-                  >
-                    <option value="">Seleccioná un puntaje</option>
-                    {scoreOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              />
-              {errors.frequencyScore?.message ? <p className={errorClasses}>{errors.frequencyScore.message}</p> : null}
+            <div className="flex gap-4 md:col-span-2">
+              <div className="flex-1">
+                <label className={labelClasses} htmlFor="frequencyNumber">
+                  Cantidad de veces *
+                </label>
+                <input
+                  id="frequencyNumber"
+                  type="number"
+                  {...register('frequencyNumber')}
+                  className={inputClasses}
+                  aria-invalid={errors.frequencyNumber ? 'true' : 'false'}
+                />
+                {errors.frequencyNumber?.message ? <p className={errorClasses}>{errors.frequencyNumber.message}</p> : null}
+              </div>
+
+              <div className="flex-1">
+                <label className={labelClasses} htmlFor="frequencyUnit">
+                  Cada (tiempo) *
+                </label>
+                <select
+                  id="frequencyUnit"
+                  {...register('frequencyUnit')}
+                  className={inputClasses}
+                  aria-invalid={errors.frequencyUnit ? 'true' : 'false'}
+                >
+                  {frequencyUnits.map((u) => (
+                    <option key={u.value} value={u.value}>
+                      {u.label}
+                    </option>
+                  ))}
+                </select>
+                {errors.frequencyUnit?.message ? <p className={errorClasses}>{errors.frequencyUnit.message}</p> : null}
+              </div>
+            </div>
+
+            <div className="md:col-span-2 rounded bg-slate-50 p-3">
+              <p className="text-xs text-slate-600">
+                Puntaje de frecuencia calculado: <span className="font-bold text-blue-600">{currentFrequencyScore}</span>
+              </p>
             </div>
           </div>
         </section>
@@ -446,7 +487,7 @@ export default function NewProjectPage(): React.ReactElement {
 
             <div>
               <label className={labelClasses} htmlFor="contactName">
-                Nombre referente *
+                Nombre del usuario *
               </label>
               <input
                 id="contactName"
@@ -460,15 +501,20 @@ export default function NewProjectPage(): React.ReactElement {
 
             <div>
               <label className={labelClasses} htmlFor="contactDepartment">
-                Gerencia referente
+                Gerencia del usuario
               </label>
-              <input
+              <select
                 id="contactDepartment"
-                type="text"
                 {...register('contactDepartment')}
                 className={inputClasses}
                 aria-invalid={errors.contactDepartment ? 'true' : 'false'}
-              />
+              >
+                {REQUESTING_DEPARTMENT_VALUES.map((value) => (
+                  <option key={value} value={value}>
+                    {requestingDepartmentLabels[value]}
+                  </option>
+                ))}
+              </select>
               {errors.contactDepartment?.message ? (
                 <p className={errorClasses}>{errors.contactDepartment.message}</p>
               ) : null}
@@ -476,7 +522,7 @@ export default function NewProjectPage(): React.ReactElement {
 
             <div>
               <label className={labelClasses} htmlFor="contactEmail">
-                Email referente
+                Email usuario
               </label>
               <input
                 id="contactEmail"
@@ -490,7 +536,7 @@ export default function NewProjectPage(): React.ReactElement {
 
             <div>
               <label className={labelClasses} htmlFor="contactPhone">
-                Teléfono referente
+                Teléfono usuario
               </label>
               <input
                 id="contactPhone"

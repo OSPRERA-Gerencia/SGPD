@@ -30,9 +30,9 @@ const formatDateTime = (value: string | null, includeTime = false): string => {
     year: 'numeric',
     ...(includeTime
       ? {
-          hour: '2-digit',
-          minute: '2-digit',
-        }
+        hour: '2-digit',
+        minute: '2-digit',
+      }
       : {}),
   });
   return formatter.format(date);
@@ -122,10 +122,13 @@ export function ProjectDetailSheet({
             </div>
           </Section>
 
-          <Section title="Frecuencia / Volumen">
+          <Section title="Frecuencia del problema">
             <div className="space-y-2">
               <DetailRow label="Descripción" value={project.frequency_description ?? '—'} />
               <DetailRow label="Puntaje" value={project.frequency_score} />
+              {project.frequency_number && (
+                <DetailRow label="Frecuencia estructurada" value={`${project.frequency_number} por ${project.frequency_unit === 'day' ? 'día' : project.frequency_unit === 'week' ? 'semana' : 'mes'}`} />
+              )}
             </div>
           </Section>
 
@@ -147,12 +150,12 @@ export function ProjectDetailSheet({
             </div>
           </Section>
 
-          <Section title="Contacto">
+          <Section title="Usuario">
             <div className="space-y-2">
               <DetailRow label="Nombre" value={project.contact_name} />
-              <DetailRow label="Gerencia" value={project.contact_department ?? '—'} />
-              <DetailRow label="Email" value={project.contact_email ?? '—'} />
-              <DetailRow label="Teléfono" value={project.contact_phone ?? '—'} />
+              <DetailRow label="Gerencia del usuario" value={departmentLabels[project.contact_department ?? ''] ?? project.contact_department ?? '—'} />
+              <DetailRow label="Email usuario" value={project.contact_email ?? '—'} />
+              <DetailRow label="Teléfono usuario" value={project.contact_phone ?? '—'} />
             </div>
           </Section>
 
